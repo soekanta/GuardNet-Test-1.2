@@ -12,16 +12,16 @@ Karena kebijakan keamanan Chrome Manifest V3 yang ketat (Content Security Policy
 
 ```mermaid
 graph TD
-    User[User Membuka Web] -->|Klik Ikon| Popup[Popup UI (popup.html)]
-    Popup -->|Klik Scan| Logic[Popup Logic (popup.js)]
+    User[User Membuka Web] -->|Klik Ikon| Popup["Popup UI (popup.html)"]
+    Popup -->|Klik Scan| Logic["Popup Logic (popup.js)"]
     Logic -->|1. Fetch HTML| Tab[Active Tab Content]
     Tab -->|Return HTML String| Logic
-    Logic -->|2. Send {URL, HTML}| Iframe[Hidden Sandbox Iframe (sandbox.html)]
-    Iframe -->|3. Extract Features| Extractor[Feature Extractor (sandbox.js)]
+    Logic -->|2. Send {URL, HTML}| Iframe["Hidden Sandbox Iframe (sandbox.html)"]
+    Iframe -->|3. Extract Features| Extractor["Feature Extractor (sandbox.js)"]
     Extractor -->|50 Numeric Features| TFJS[TensorFlow.js Model]
     TFJS -->|Prediction Score| Iframe
     Iframe -->|4. Post Message| Logic
-    Logic -->|5. Update UI| UIResult[Tampilan Hasil (Aman/Phishing)]
+    Logic -->|5. Update UI| UIResult["Tampilan Hasil (Aman/Phishing)"]
 ```
 
 ## 3. Implementasi Fitur (50 Fitur)

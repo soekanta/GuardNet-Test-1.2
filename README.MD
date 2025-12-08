@@ -1,0 +1,67 @@
+# GuardNet 🛡️
+### AI-Powered Phishing Detection Extension
+
+GuardNet adalah ekstensi Google Chrome cerdas yang dirancang untuk mendeteksi situs web phishing secara *real-time* langsung dari browser Anda. Menggunakan model *Machine Learning* TensorFlow.js yang berjalan sepenuhnya secara offline (di sisi klien), GuardNet menjaga privasi data Anda sekaligus memberikan perlindungan maksimal dari ancaman siber.
+
+---
+
+## 👥 Tim Pengembang
+
+Proyek ini dipersembahkan oleh:
+
+*   **Wahyu Soekanta**
+*   **Katrin Wijaya**
+*   **Nuragustyani br Bangun**
+
+---
+
+## 🚀 Fitur Utama
+
+*   **⚡ Deteksi Cepat & Akurat**: Menganalisis URL dan konten halaman dalam hitungan detik menggunakan Neural Network.
+*   **🔒 Privasi Terjamin**: Arsitektur *client-side only*. Data browsing Anda tidak pernah dikirim ke server/cloud eksternal. Model AI berjalan langsung di browser Anda.
+*   **🧠 Analisis Mendalam (50 Fitur)**: Tidak hanya mengecek *blacklist*, GuardNet menganalisis **50 karakteristik** website termasuk:
+    *   Pola URL (panjang, karakter aneh, IP address).
+    *   Konten Halaman (jumlah iframe, form login tersembunyi, redirection).
+    *   Elemen Teknis (HTTPS status, favicon, script eksternal).
+*   **🌐 Dukungan Offline**: Tetap bekerja melindungi Anda bahkan tanpa koneksi internet yang stabil (setelah instalasi awal).
+
+## 🛠️ Arsitektur Teknis
+
+GuardNet dibangun menggunakan standar web modern (**Manifest V3**) dan teknik **Sandboxing** untuk menjembatani keamanan Chrome dengan fleksibilitas TensorFlow.js.
+
+```mermaid
+graph TD
+    User[User Membuka Web] -->|Klik Ikon| Popup["Popup UI (popup.html)"]
+    Popup -->|Klik Scan| Logic["Popup Logic (popup.js)"]
+    Logic -->|1. Ambil HTML| Tab[Konten Tab Aktif]
+    Tab -->|Kembalikan String HTML| Logic
+    Logic -->|2. Kirim Data {URL, HTML}| Iframe["Sandbox Iframe (Hidden)"]
+    Iframe -->|3. Ekstraksi 50 Fitur| Extractor["Feature Extractor (sandbox.js)"]
+    Extractor -->|Input 50 Fitur| TFJS[TensorFlow.js Model]
+    TFJS -->|Skor Prediksi| Iframe
+    Iframe -->|4. Kirim Hasil| Logic
+    Logic -->|5. Update UI| UIResult["Hasil: Aman / Phishing"]
+```
+
+## 📦 Panduan Instalasi
+
+1.  **Download Source Code**: Clone repository ini atau unduh sebagai ZIP dan ekstrak.
+2.  **Buka Manajemen Ekstensi**:
+    *   Buka browser Google Chrome.
+    *   Ketik `chrome://extensions/` di address bar.
+3.  **Aktifkan Developer Mode**:
+    *   Klik tombol toggle **"Developer mode"** di pojok kanan atas halaman.
+4.  **Load Extension**:
+    *   Klik tombol **"Load unpacked"**.
+    *   Pilih folder `GuardNet` yang telah di-ekstrak.
+5.  **Selesai!** Ikon GuardNet akan muncul di toolbar browser Anda.
+
+## 💻 Cara Penggunaan
+
+1.  Kunjungi situs web yang ingin Anda periksa keamanannya.
+2.  Klik ikon **GuardNet** di toolbar.
+3.  Klik tombol **"Scan Current Tab"**.
+4.  Tunggu beberapa saat, GuardNet akan memberikan analisis apakah situs tersebut **Aman (Safe)** atau **Berbahaya (Phishing)** beserta tingkat kepercayaannya.
+
+---
+*Dikembangkan dengan ❤️ untuk keamanan internet yang lebih baik.*
