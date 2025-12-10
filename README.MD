@@ -28,7 +28,8 @@ Proyek ini dipersembahkan oleh:
 ## ⚠️ Batasan & Kelemahan Sistem (Known Limitations)
 
 1.  **Masalah CORS (Cross-Origin Resource Sharing)**:
-    Beberapa website dengan keamanan tinggi (misal: situs pemerintahan/kampus) memblokir akses konten eksternal. Pada kasus ini, GuardNet mungkin gagal membaca fitur konten (Title, Favicon, dll) dan secara keliru menandainya sebagai **"Phishing (Merah)"**. Ini adalah batasan browser, bukan kesalahan model.
+    *   **Apa itu CORS?**: Mekanisme keamanan di browser yang melarang sebuah website (atau ekstensi) mengambil data dari website lain tanpa izin.
+    *   **Dampaknya**: Beberapa website ketat (seperti `uni-mainz.de`) memblokir GuardNet untuk membaca konten HTML-nya. Akibatnya, GuardNet melihat halaman tersebut "kosong" (fitur = 0), yang oleh model dianggap sebagai ciri-ciri website phising/rusak, sehingga muncul **False Positive 100% (Merah)**.
 
 2.  **Bias Dataset**:
     Model dilatih dominan dengan data domain global (.com, .net). Domain lokal spesifik (seperti `.co.id`) mungkin kadang terdeteksi sebagai anomali jika jarang ditemukan di data latih.
@@ -83,6 +84,7 @@ Berikut adalah beberapa URL yang bisa Anda gunakan untuk menguji kinerja GuardNe
 
 ### ⚠️ Edge Cases / Warning (Kuning)
 *   `https://www.netgear.com` (Terdeteksi **Warning/Kuning**).
+*   `https://www.kompas.id` (Berita Premium -> **Warning/Kuning**).
 *   `https://www.uni-mainz.de` (Situs Universitas Jerman -> **False Positive (100%)** karena blokir CORS).
 *   `https://www.kompasiana.com` (Platform Blog Lokal -> **False Positive (Merah)** mungkin karena konten user/CORS).
 
