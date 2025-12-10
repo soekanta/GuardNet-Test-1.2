@@ -88,6 +88,10 @@ Berikut adalah beberapa URL yang bisa Anda gunakan untuk menguji kinerja GuardNe
 *   `https://www.uni-mainz.de` (Situs Universitas Jerman -> **False Positive (100%)** karena blokir CORS).
 *   `https://www.kompasiana.com` (Platform Blog Lokal -> **False Positive (Merah)** mungkin karena konten user/CORS).
 
+> **💡 Note Analisis: Kenapa Kaskus Hijau tapi Kompas.id Kuning?**
+> *   **Kaskus (Aman)**: Memiliki struktur forum yang standar dan terbuka. Konten teks mendominasi dan mudah dibaca oleh ekstraktor fitur GuardNet, sehingga skor legitimasinya tinggi.
+> *   **Kompas.id (Waspada)**: Merupakan situs berita premium yang menggunakan *Paywall* (tembok langganan) dan script kompleks untuk membatasi akses. Struktur ini kadang terdeteksi sebagai "anomali" atau "konten tersembunyi" oleh model login-trap detector, sehingga menaikkan skor risiko ke level **Warning**.
+
 ---
 
 ## 💻 Cara Penggunaan
