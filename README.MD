@@ -73,7 +73,7 @@ Berikut adalah beberapa URL yang bisa Anda gunakan untuk menguji kinerja GuardNe
 
 ### ✅ Situs Aman (Safe)
 *   `https://www.google.com`
-*   `https://www.netgear.com`
+*   `https://www.kaskus.co.id`
 *   `https://www.kompasiana.com`
 
 ### ❌ Situs Phishing (Bahaya)
@@ -82,9 +82,9 @@ Berikut adalah beberapa URL yang bisa Anda gunakan untuk menguji kinerja GuardNe
 *   `http://www.paypal-update.grasssnake.fastom.pl`
 *   `http://ypxn-xn--80aaahorunoimsf3p.xn--p1ai/fix-account/`
 
-### ⚠️ Edge Cases (Tantangan)
+### ⚠️ Edge Cases / Warning (Kuning)
+*   `https://www.netgear.com` (Terdeteksi **Warning/Kuning**).
 *   `https://www.uni-mainz.de` (Situs Universitas Jerman -> **False Positive (100%)** karena blokir CORS).
-*   `https://www.kaskus.co.id` (Domain lokal -> Kemungkinan bias dataset karena jarang melihat `.co.id`).
 
 ---
 
