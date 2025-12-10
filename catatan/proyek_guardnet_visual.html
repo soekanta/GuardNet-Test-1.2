@@ -151,9 +151,8 @@ Model membutuhkan 50 fitur numerik sebagai input. Fitur ini diekstrak dari **URL
 \`\`\`
 GuardNet/
 ├── manifest.json       # Konfigurasi ekstensi (Manifest V3)
-├── popup.html          # Antarmuka pengguna (UI)
-├── popup.js            # Logika UI & komunikasi dengan sandbox
-├── style.css           # Styling untuk popup
+├── scan.html           # Antarmuka pengguna (UI)
+├── scan.js             # Logika UI & komunikasi dengan sandbox
 ├── sandbox.html        # Halaman terisolasi untuk menjalankan TensorFlow.js
 ├── sandbox.js          # Logika ekstraksi fitur & prediksi model
 ├── background.js       # Service worker (jika diperlukan untuk ekspansi)
@@ -193,8 +192,8 @@ Ekstensi ini menggunakan izin \`activeTab\` dan \`scripting\` hanya saat penggun
         const mermaidGraph = `
 <div class="mermaid">
 graph TD
-    User["User Membuka Web"] -->|Klik Ikon| Popup["Popup UI (popup.html)"]
-    Popup -->|"Klik Scan"| Logic["Popup Logic (popup.js)"]
+    User["User Membuka Web"] -->|Klik Ikon| Popup["Popup UI (scan.html)"]
+    Popup -->|"Klik Scan"| Logic["Popup Logic (scan.js)"]
     Logic -->|"1. Ambil HTML"| Tab["Konten Tab Aktif"]
     Tab -->|"Kembalikan String HTML"| Logic
     Logic -->|"2. Kirim Data (URL, HTML)"| Iframe["Sandbox Iframe (Hidden)"]

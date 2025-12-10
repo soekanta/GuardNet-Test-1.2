@@ -41,8 +41,8 @@ GuardNet dibangun menggunakan standar web modern (**Manifest V3**) dan teknik **
 
 ```mermaid
 graph TD
-    User["User Membuka Web"] -->|Klik Ikon| Popup["Popup UI (popup.html)"]
-    Popup -->|"Klik Scan"| Logic["Popup Logic (popup.js)"]
+    User["User Membuka Web"] -->|Klik Ikon| Popup["Popup UI (scan.html)"]
+    Popup -->|"Klik Scan"| Logic["Popup Logic (scan.js)"]
     Logic -->|"1. Ambil HTML"| Tab["Konten Tab Aktif"]
     Tab -->|"Kembalikan String HTML"| Logic
     Logic -->|"2. Kirim Data (URL, HTML)"| Iframe["Sandbox Iframe (Hidden)"]
