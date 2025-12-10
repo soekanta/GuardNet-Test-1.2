@@ -66,6 +66,28 @@ graph TD
     *   Pilih folder `GuardNet` yang telah di-ekstrak.
 5.  **Selesai!** Ikon GuardNet akan muncul di toolbar browser Anda.
 
+## 🧪 Contoh URL untuk Testing
+
+Berikut adalah beberapa URL yang bisa Anda gunakan untuk menguji kinerja GuardNet.
+*(Catatan: Sebagian URL phishing mungkin sudah mati/offline karena umur dataset)*
+
+### ✅ Situs Aman (Safe)
+*   `https://www.google.com`
+*   `https://www.netgear.com`
+*   `https://www.kompasiana.com`
+
+### ❌ Situs Phishing (Bahaya)
+*Diambil dari dataset PhiUSIIL:*
+*   `http://paypal.idkit.co/` (Target: PayPal)
+*   `http://www.paypal-update.grasssnake.fastom.pl`
+*   `http://ypxn-xn--80aaahorunoimsf3p.xn--p1ai/fix-account/`
+
+### ⚠️ Edge Cases (Tantangan)
+*   `https://www.uni-mainz.de` (Situs Universitas Jerman -> **False Positive (100%)** karena blokir CORS).
+*   `https://www.kaskus.co.id` (Domain lokal -> Kemungkinan bias dataset karena jarang melihat `.co.id`).
+
+---
+
 ## 💻 Cara Penggunaan
 
 1.  Kunjungi situs web yang ingin Anda periksa keamanannya.
