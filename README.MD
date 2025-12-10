@@ -9,9 +9,9 @@ GuardNet adalah ekstensi Google Chrome cerdas yang dirancang untuk mendeteksi si
 
 Proyek ini dipersembahkan oleh:
 
-*   **Wahyu Soekanta**
+*   **Wahyu Soekanta Ginting**
 *   **Katrin Wijaya**
-*   **Nuragustyani br Bangun**
+*   **Nuragustyani**
 
 ---
 
@@ -23,7 +23,17 @@ Proyek ini dipersembahkan oleh:
     *   Pola URL (panjang, karakter aneh, IP address).
     *   Konten Halaman (jumlah iframe, form login tersembunyi, redirection).
     *   Elemen Teknis (HTTPS status, favicon, script eksternal).
-*   **🌐 Dukungan Offline**: Tetap bekerja melindungi Anda bahkan tanpa koneksi internet yang stabil (setelah instalasi awal).
+*   **🌐 Dukungan Offline**: Model berjalan lokal tanpa internet, namun ekstraksi fitur memerlukan akses ke tab aktif.
+
+## ⚠️ Batasan & Kelemahan Sistem (Known Limitations)
+
+1.  **Masalah CORS (Cross-Origin Resource Sharing)**:
+    Beberapa website dengan keamanan tinggi (misal: situs pemerintahan/kampus) memblokir akses konten eksternal. Pada kasus ini, GuardNet mungkin gagal membaca fitur konten (Title, Favicon, dll) dan secara keliru menandainya sebagai **"Phishing (Merah)"**. Ini adalah batasan browser, bukan kesalahan model.
+
+2.  **Bias Dataset**:
+    Model dilatih dominan dengan data domain global (.com, .net). Domain lokal spesifik (seperti `.co.id`) mungkin kadang terdeteksi sebagai anomali jika jarang ditemukan di data latih.
+
+---
 
 ## 🛠️ Arsitektur Teknis
 
