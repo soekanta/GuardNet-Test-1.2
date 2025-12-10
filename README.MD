@@ -74,7 +74,6 @@ Berikut adalah beberapa URL yang bisa Anda gunakan untuk menguji kinerja GuardNe
 ### ✅ Situs Aman (Safe)
 *   `https://www.google.com`
 *   `https://www.kaskus.co.id`
-*   `https://www.kompasiana.com`
 
 ### ❌ Situs Phishing (Bahaya)
 *Diambil dari dataset PhiUSIIL:*
@@ -85,6 +84,7 @@ Berikut adalah beberapa URL yang bisa Anda gunakan untuk menguji kinerja GuardNe
 ### ⚠️ Edge Cases / Warning (Kuning)
 *   `https://www.netgear.com` (Terdeteksi **Warning/Kuning**).
 *   `https://www.uni-mainz.de` (Situs Universitas Jerman -> **False Positive (100%)** karena blokir CORS).
+*   `https://www.kompasiana.com` (Platform Blog Lokal -> **False Positive (Merah)** mungkin karena konten user/CORS).
 
 ---
 
