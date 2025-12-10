@@ -1,7 +1,9 @@
 // GuardNet - Sandbox Script for TensorFlow.js
 // This runs in a sandboxed iframe with relaxed CSP
+// UPDATED: Uses proper StandardScaler normalization from training
 
 let model = null;
+let scalerParams = null;
 
 // Load the model
 async function loadModel() {
@@ -16,6 +18,23 @@ async function loadModel() {
         }
     }
     return model;
+}
+
+// Load scaler parameters
+async function loadScalerParams() {
+    if (!scalerParams) {
+        console.log('[Sandbox] Loading scaler parameters...');
+        try {
+            const response = await fetch('./models/scaler_params.json');
+            scalerParams = await response.json();
+            console.log('[Sandbox] Scaler parameters loaded');
+        } catch (e) {
+            console.error('[Sandbox] Failed to load scaler params:', e);
+            // Fallback: use no normalization (model might not work well)
+            scalerParams = null;
+        }
+    }
+    return scalerParams;
 }
 
 // Helper functions for features
@@ -54,166 +73,290 @@ function extractFeatures(urlStr, content) {
         return new Array(50).fill(0);
     }
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content || '', 'text/html');
+    // Handle empty content gracefully
+    // When content is not available (CORS), use SUSPICIOUS defaults to not bias toward safe
+    const hasContent = content && content.length > 100;
 
-    // --- Feature Extraction Logic (50 Features) ---
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content || '<html><head><title></title></head><body></body></html>', 'text/html');
+
     const features = [];
 
+    // ========== URL-BASED FEATURES (1-22) ==========
+
     // 1. URLLength
-    features.push(urlStr.length);
+    const urlLength = urlStr.length;
+    features.push(urlLength);
+
     // 2. DomainLength
-    features.push(urlObj.hostname.length);
+    const domainLength = urlObj.hostname.length;
+    features.push(domainLength);
+
     // 3. IsDomainIP
     const isIP = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(urlObj.hostname) ? 1 : 0;
     features.push(isIP);
-    // 4. URLSimilarityIndex (Approximation: 100 for now, would need external DB)
-    features.push(100.0);
-    // 5. CharContinuationRate (Approximation based on simple logic)
-    // Ratio of longest continuous char sequence to total length
+
+    // 4. URLSimilarityIndex
+    const urlSimilarity = (urlLength < 50 && domainLength < 20) ? 80 : 50;
+    features.push(urlSimilarity);
+
+    // 5. CharContinuationRate
     let maxSeq = 0, currSeq = 1;
     for (let i = 1; i < urlStr.length; i++) {
         if (urlStr[i] === urlStr[i - 1]) currSeq++;
         else { maxSeq = Math.max(maxSeq, currSeq); currSeq = 1; }
     }
-    features.push(maxSeq / urlStr.length);
-    // 6. TLDLegitimateProb (Approximation)
-    // Common TLDs get higher score
+    const charContinuationRate = urlLength > 0 ? maxSeq / urlLength : 0;
+    features.push(charContinuationRate);
+
+    // 6. TLDLegitimateProb
     const tld = urlObj.hostname.split('.').pop();
-    const commonTLDs = ['com', 'org', 'net', 'edu', 'gov'];
-    features.push(commonTLDs.includes(tld) ? 0.9 : 0.1);
-    // 7. URLCharProb (Approximation: inversely proportional to entropy)
-    features.push(1.0 / (calculateEntropy(urlStr) + 1));
+    const commonTLDs = ['com', 'org', 'net', 'edu', 'gov', 'io', 'co', 'id'];
+    const tldProb = commonTLDs.includes(tld) ? 0.9 : 0.3;
+    features.push(tldProb);
+
+    // 7. URLCharProb
+    const urlEntropy = calculateEntropy(urlStr);
+    const urlCharProb = 1.0 / (urlEntropy + 1);
+    features.push(urlCharProb);
+
     // 8. TLDLength
     features.push(tld.length);
+
     // 9. NoOfSubDomain
     const parts = urlObj.hostname.split('.');
-    features.push(parts.length - 2 > 0 ? parts.length - 2 : 0);
-    // 10. HasObfuscation (Check for hex chars or unusual encodings)
-    features.push(/%[0-9A-Fa-f]{2}/.test(urlStr) ? 1 : 0);
+    const numSubdomains = parts.length - 2 > 0 ? parts.length - 2 : 0;
+    features.push(numSubdomains);
+
+    // 10. HasObfuscation
+    const hasObfuscation = /%[0-9A-Fa-f]{2}/.test(urlStr) ? 1 : 0;
+    features.push(hasObfuscation);
+
     // 11. NoOfObfuscatedChar
-    features.push((urlStr.match(/%[0-9A-Fa-f]{2}/g) || []).length);
+    const numObfuscated = (urlStr.match(/%[0-9A-Fa-f]{2}/g) || []).length;
+    features.push(numObfuscated);
+
     // 12. ObfuscationRatio
-    features.push(features[10] / urlStr.length);
+    const obfuscationRatio = urlLength > 0 ? numObfuscated / urlLength : 0;
+    features.push(obfuscationRatio);
+
     // 13. NoOfLettersInURL
-    features.push((urlStr.match(/[a-zA-Z]/g) || []).length);
+    const numLetters = (urlStr.match(/[a-zA-Z]/g) || []).length;
+    features.push(numLetters);
+
     // 14. LetterRatioInURL
-    features.push(features[12] / urlStr.length);
-    // 15. NoOfDegitsInURL
-    features.push((urlStr.match(/\d/g) || []).length);
-    // 16. DegitRatioInURL
-    features.push(features[14] / urlStr.length);
+    const letterRatio = urlLength > 0 ? numLetters / urlLength : 0;
+    features.push(letterRatio);
+
+    // 15. NoOfDigitsInURL
+    const numDigits = (urlStr.match(/\d/g) || []).length;
+    features.push(numDigits);
+
+    // 16. DigitRatioInURL
+    const digitRatio = urlLength > 0 ? numDigits / urlLength : 0;
+    features.push(digitRatio);
+
     // 17. NoOfEqualsInURL
     features.push(countChar(urlStr, '='));
+
     // 18. NoOfQMarkInURL
     features.push(countChar(urlStr, '?'));
+
     // 19. NoOfAmpersandInURL
     features.push(countChar(urlStr, '&'));
-    // 20. NoOfOtherSpecialCharsInURL
-    features.push((urlStr.match(/[^a-zA-Z0-9\s]/g) || []).length);
-    // 21. SpacialCharRatioInURL
-    features.push(features[19] / urlStr.length);
-    // 22. IsHTTPS
-    features.push(urlObj.protocol === 'https:' ? 1 : 0);
 
-    // -- Content Based Features --
+    // 20. NoOfOtherSpecialCharsInURL
+    const numSpecialChars = (urlStr.match(/[^a-zA-Z0-9\s]/g) || []).length;
+    features.push(numSpecialChars);
+
+    // 21. SpecialCharRatioInURL
+    const specialCharRatio = urlLength > 0 ? numSpecialChars / urlLength : 0;
+    features.push(specialCharRatio);
+
+    // 22. IsHTTPS
+    const isHttps = urlObj.protocol === 'https:' ? 1 : 0;
+    features.push(isHttps);
+
+    // ========== CONTENT-BASED FEATURES (23-50) ==========
 
     // 23. LineOfCode
-    features.push(content.split('\n').length);
+    const lines = content ? content.split('\n').length : 100;
+    features.push(lines);
+
     // 24. LargestLineLength
-    features.push(Math.max(...content.split('\n').map(l => l.length), 0));
-    // 25. HasTitle
-    features.push(doc.title ? 1 : 0);
-    // 26. DomainTitleMatchScore (0 to 100)
-    // Simple check if domain is in title
-    const title = doc.title.toLowerCase();
-    const domain = urlObj.hostname.toLowerCase();
-    features.push(title.includes(domain) || domain.includes(title) ? 100 : 0);
-    // 27. URLTitleMatchScore (0 to 100)
+    const largestLine = content ? Math.max(...content.split('\n').map(l => l.length), 0) : 500;
+    features.push(largestLine);
+
+    // 25. HasTitle (suspicious default: 0 - phishing sites often lack proper titles)
+    const hasTitle = doc.title && doc.title.trim().length > 0 ? 1 : 0;
+    features.push(hasTitle);
+
+    // 26. DomainTitleMatchScore (suspicious default: 0 - no match)
+    const title = (doc.title || '').toLowerCase();
+    const domain = urlObj.hostname.toLowerCase().replace('www.', '');
+    const domainWords = domain.split('.')[0];
+    const titleMatchScore = (title.includes(domainWords) || domainWords.includes(title.split(' ')[0])) ? 100 : 0;
+    features.push(titleMatchScore);
+
+    // 27. URLTitleMatchScore
     features.push(title.includes(urlStr) ? 100 : 0);
-    // 28. HasFavicon
-    features.push(doc.querySelector('link[rel*="icon"]') ? 1 : 0);
+
+    // 28. HasFavicon (suspicious default: 0 - phishing sites often lack favicons)
+    const hasFavicon = doc.querySelector('link[rel*="icon"]') ? 1 : 0;
+    features.push(hasFavicon);
+
     // 29. Robots
-    features.push(content.toLowerCase().includes('robots.txt') ? 1 : 0);
-    // 30. IsResponsive
-    // Check for viewport meta tag or media queries
-    features.push(doc.querySelector('meta[name="viewport"]') || content.includes('@media') ? 1 : 0);
+    const hasRobots = content && content.toLowerCase().includes('robots') ? 1 : 0;
+    features.push(hasRobots);
+
+    // 30. IsResponsive (suspicious default: 0)
+    const isResponsive = (doc.querySelector('meta[name="viewport"]') || (content && content.includes('@media'))) ? 1 : 0;
+    features.push(isResponsive);
+
     // 31. NoOfURLRedirect
-    features.push(0); // Cannot detect easily from here
+    features.push(0);
+
     // 32. NoOfSelfRedirect
-    features.push(0); // Cannot detect easily from here
-    // 33. HasDescription
-    features.push(doc.querySelector('meta[name="description"]') ? 1 : 0);
+    features.push(0);
+
+    // 33. HasDescription (suspicious default: 0 - phishing sites often lack meta descriptions)
+    const hasDescription = doc.querySelector('meta[name="description"]') ? 1 : 0;
+    features.push(hasDescription);
+
     // 34. NoOfPopup
-    features.push(countChar(content.toLowerCase(), 'window.open'));
-    // 35. NoOfiFrame
-    features.push(doc.querySelectorAll('iframe').length);
+    const numPopups = content ? (content.toLowerCase().match(/window\.open/g) || []).length : 0;
+    features.push(numPopups);
+
+    // 35. NoOfIFrame
+    const numIframes = doc.querySelectorAll('iframe').length;
+    features.push(numIframes);
+
     // 36. HasExternalFormSubmit
-    {
+    let hasExternalForm = 0;
+    if (hasContent) {
         const forms = Array.from(doc.querySelectorAll('form'));
-        let external = 0;
         forms.forEach(f => {
-            if (f.action && f.action.startsWith('http') && !f.action.includes(urlObj.hostname)) external = 1;
+            if (f.action && f.action.startsWith('http') && !f.action.includes(urlObj.hostname)) {
+                hasExternalForm = 1;
+            }
         });
-        features.push(external);
     }
-    // 37. HasSocialNet (Check for facebook, twitter, etc links)
-    features.push(/facebook|twitter|instagram|linkedin/.test(content.toLowerCase()) ? 1 : 0);
-    // 38. HasSubmitButton
-    features.push(doc.querySelector('input[type="submit"], button[type="submit"]') ? 1 : 0);
+    features.push(hasExternalForm);
+
+    // 37. HasSocialNet (suspicious default: 0)
+    const hasSocialNet = content && /facebook|twitter|instagram|linkedin/.test(content.toLowerCase()) ? 1 : 0;
+    features.push(hasSocialNet);
+
+    // 38. HasSubmitButton (keep as is - submit buttons are neutral)
+    const hasSubmitBtn = doc.querySelector('input[type="submit"], button[type="submit"]') ? 1 : 0;
+    features.push(hasSubmitBtn);
+
     // 39. HasHiddenFields
-    features.push(doc.querySelectorAll('input[type="hidden"]').length > 0 ? 1 : 0);
+    const hasHiddenFields = doc.querySelectorAll('input[type="hidden"]').length > 0 ? 1 : 0;
+    features.push(hasHiddenFields);
+
     // 40. HasPasswordField
-    features.push(doc.querySelectorAll('input[type="password"]').length > 0 ? 1 : 0);
-    // 41. Bank
-    features.push(/bank|banking/.test(content.toLowerCase()) ? 1 : 0);
-    // 42. Pay
-    features.push(/pay|payment/.test(content.toLowerCase()) ? 1 : 0);
-    // 43. Crypto
-    features.push(/crypto|bitcoin/.test(content.toLowerCase()) ? 1 : 0);
-    // 44. HasCopyrightInfo
-    features.push(/copyright|©/.test(content.toLowerCase()) ? 1 : 0);
-    // 45. NoOfImage
-    features.push(doc.querySelectorAll('img').length);
-    // 46. NoOfCSS
-    features.push(doc.querySelectorAll('link[rel="stylesheet"], style').length);
-    // 47. NoOfJS
-    features.push(doc.querySelectorAll('script').length);
-    // 48. NoOfSelfRef
-    {
-        const links = Array.from(doc.querySelectorAll('a'));
-        const selfRef = links.filter(a => a.href.includes(urlObj.hostname) || a.href.startsWith('/') || a.href.startsWith('#')).length;
-        features.push(selfRef);
-    }
+    const hasPasswordField = doc.querySelectorAll('input[type="password"]').length > 0 ? 1 : 0;
+    features.push(hasPasswordField);
+
+    // 41. Bank keyword
+    const hasBankKeyword = content && /bank|banking/i.test(content) ? 1 : 0;
+    features.push(hasBankKeyword);
+
+    // 42. Pay keyword
+    const hasPayKeyword = content && /pay|payment/i.test(content) ? 1 : 0;
+    features.push(hasPayKeyword);
+
+    // 43. Crypto keyword
+    const hasCryptoKeyword = content && /crypto|bitcoin/i.test(content) ? 1 : 0;
+    features.push(hasCryptoKeyword);
+
+    // 44. HasCopyrightInfo (suspicious default: 0 - phishing sites often lack copyright)
+    const hasCopyright = content && /copyright|©/i.test(content) ? 1 : 0;
+    features.push(hasCopyright);
+
+    // 45. NoOfImage (use actual count, default 0)
+    const numImages = doc.querySelectorAll('img').length;
+    features.push(numImages);
+
+    // 46. NoOfCSS (use actual count, default 0)
+    const numCSS = doc.querySelectorAll('link[rel="stylesheet"], style').length;
+    features.push(numCSS);
+
+    // 47. NoOfJS (use actual count, default 0)
+    const numJS = doc.querySelectorAll('script').length;
+    features.push(numJS);
+
+    // 48. NoOfSelfRef (use actual count, default 0)
+    let numSelfRef = 0;
+    const selfRefLinks = Array.from(doc.querySelectorAll('a'));
+    numSelfRef = selfRefLinks.filter(a => {
+        const href = a.getAttribute('href') || '';
+        return href.includes(urlObj.hostname) || href.startsWith('/') || href.startsWith('#');
+    }).length;
+    features.push(numSelfRef);
+
     // 49. NoOfEmptyRef
-    {
+    let numEmptyRef = 0;
+    if (hasContent) {
         const links = Array.from(doc.querySelectorAll('a'));
-        const emptyRef = links.filter(a => a.href === '' || a.href === '#').length;
-        features.push(emptyRef);
+        numEmptyRef = links.filter(a => {
+            const href = a.getAttribute('href') || '';
+            return href === '' || href === '#' || href === 'javascript:void(0)';
+        }).length;
     }
-    // 50. NoOfExternalRef
-    {
-        const links = Array.from(doc.querySelectorAll('a'));
-        const extRef = links.filter(a => a.href.startsWith('http') && !a.href.includes(urlObj.hostname)).length;
-        features.push(extRef);
+    features.push(numEmptyRef);
+
+    // 50. NoOfExternalRef (use actual count, default 0)
+    let numExtRef = 0;
+    const extRefLinks = Array.from(doc.querySelectorAll('a'));
+    numExtRef = extRefLinks.filter(a => {
+        const href = a.getAttribute('href') || '';
+        return href.startsWith('http') && !href.includes(urlObj.hostname);
+    }).length;
+    features.push(numExtRef);
+
+    console.log('[Sandbox] Features extracted:', features.length);
+
+    return features.slice(0, 50);
+}
+
+/**
+ * Normalize features using StandardScaler parameters from training
+ */
+function normalizeFeatures(features, scaler) {
+    if (!scaler || !scaler.mean || !scaler.std) {
+        console.warn('[Sandbox] No scaler params, using raw features');
+        return features;
     }
 
-    // Ensure 50 features exactly
-    return features.slice(0, 50);
+    return features.map((val, i) => {
+        const mean = scaler.mean[i] || 0;
+        const std = scaler.std[i] || 1;
+        // StandardScaler formula: (x - mean) / std
+        return (val - mean) / std;
+    });
 }
 
 // Predict function
 async function predict(url, content) {
     await loadModel();
+    await loadScalerParams();
 
-    console.log('[Sandbox] Extracting features for:', url);
+    console.log('[Sandbox] Analyzing:', url);
     const features = extractFeatures(url, content);
-    console.log('[Sandbox] Features:', features);
+    console.log('[Sandbox] Raw Features:', features);
 
-    const inputTensor = tf.tensor2d([features], [1, 50]);
+    // Apply StandardScaler normalization (CRITICAL for accurate predictions!)
+    const normalizedFeatures = normalizeFeatures(features, scalerParams);
+    console.log('[Sandbox] Normalized Features:', normalizedFeatures.slice(0, 5), '...');
+
+    const inputTensor = tf.tensor2d([normalizedFeatures], [1, 50]);
 
     const prediction = model.predict(inputTensor);
-    const score = prediction.dataSync()[0];
+    // Model (Label 1=Legit) predicts P(Legitimate), so we invert it to get P(Phishing)
+    const legitScore = prediction.dataSync()[0];
+    const score = 1.0 - legitScore;
 
     // Cleanup tensors
     inputTensor.dispose();
@@ -239,6 +382,7 @@ window.addEventListener('message', async (event) => {
 // Signal ready
 window.addEventListener('load', () => {
     console.log('[Sandbox] Ready');
-    // Pre-load model
-    loadModel().catch(err => console.error('[Sandbox] Pre-load error:', err));
+    // Pre-load model and scaler
+    Promise.all([loadModel(), loadScalerParams()])
+        .catch(err => console.error('[Sandbox] Pre-load error:', err));
 });
