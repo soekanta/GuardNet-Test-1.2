@@ -31,16 +31,16 @@ GuardNet dibangun menggunakan standar web modern (**Manifest V3**) dan teknik **
 
 ```mermaid
 graph TD
-    User[User Membuka Web] -->|Klik Ikon| Popup["Popup UI (popup.html)"]
-    Popup -->|Klik Scan| Logic["Popup Logic (popup.js)"]
-    Logic -->|1. Ambil HTML| Tab[Konten Tab Aktif]
-    Tab -->|Kembalikan String HTML| Logic
-    Logic -->|2. Kirim Data (URL, HTML)| Iframe["Sandbox Iframe (Hidden)"]
-    Iframe -->|3. Ekstraksi 50 Fitur| Extractor["Feature Extractor (sandbox.js)"]
-    Extractor -->|Input 50 Fitur| TFJS[TensorFlow.js Model]
-    TFJS -->|Skor Prediksi| Iframe
-    Iframe -->|4. Kirim Hasil| Logic
-    Logic -->|5. Update UI| UIResult["Hasil: Aman / Phishing"]
+    User["User Membuka Web"] -->|Klik Ikon| Popup["Popup UI (popup.html)"]
+    Popup -->|"Klik Scan"| Logic["Popup Logic (popup.js)"]
+    Logic -->|"1. Ambil HTML"| Tab["Konten Tab Aktif"]
+    Tab -->|"Kembalikan String HTML"| Logic
+    Logic -->|"2. Kirim Data (URL, HTML)"| Iframe["Sandbox Iframe (Hidden)"]
+    Iframe -->|"3. Ekstraksi 50 Fitur"| Extractor["Feature Extractor (sandbox.js)"]
+    Extractor -->|"Input 50 Fitur"| TFJS["TensorFlow.js Model"]
+    TFJS -->|"Skor Prediksi"| Iframe
+    Iframe -->|"4. Kirim Hasil"| Logic
+    Logic -->|"5. Update UI"| UIResult["Hasil: Aman / Phishing"]
 ```
 
 ## 📦 Panduan Instalasi
