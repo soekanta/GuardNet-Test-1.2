@@ -97,9 +97,9 @@ Berikut adalah beberapa URL yang bisa Anda gunakan untuk menguji kinerja GuardNe
 ## 💻 Cara Penggunaan
 
 1.  Kunjungi situs web yang ingin Anda periksa keamanannya.
-2.  Klik ikon **GuardNet** di toolbar.
-3.  Klik tombol **"Scan Current Tab"**.
-4.  Tunggu beberapa saat, GuardNet akan memberikan analisis apakah situs tersebut **Aman (Safe)** atau **Berbahaya (Phishing)** beserta tingkat kepercayaannya.
+2.  **Klik ikon GuardNet** di toolbar browser.
+3.  GuardNet akan secara **otomatis (Real-time)** melakukan scanning tanpa perlu menekan tombol apa pun.
+4.  Hasil analisis (Aman/Waspada/Phishing) akan langsung muncul dalam hitungan detik.
 
 ---
 *Dikembangkan dengan ❤️ untuk keamanan internet yang lebih baik.*
